@@ -20,12 +20,13 @@ app.use(express.json());
 
 // Initialize Passport for authentication
 app.use(passport.initialize());
+require("./config/passport");
 
 // Connect to database
 connectDB();
 
 // routes
-app.use("api/auth", require("./routes/auth"));
+app.use("/api/auth", require("./routes/auth"));
 app.use("/api/todos", require("./routes/todos"));
 
 app.use((req, res) => {

@@ -10,10 +10,9 @@ router.get(
   passport.authenticate("google", { scope: ["profile", "email"] }),
 );
 
-(router.get(
-  "google/callback",
+router.get(
+  "/google/callback",
   passport.authenticate("google", { failureRedirect: "/login" }),
-),
   (req, res) => {
     const user = req.user;
 
@@ -23,38 +22,39 @@ router.get(
         email: user.email,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }, // Token expires in 7 days
+      { expiresIn: "7d" },
     );
 
     res.redirect(
       `${process.env.FRONTEND_URL}/auth-callback?token=${token}&userId=${user._id}`,
     );
-  });
-
-router.get(
-  "/github",
-  passport.authenticate("github", { scope: ["user:email"] }),
+  },
 );
 
-(router.get("/github/callback", passport.authenticate("github"), {
-  failureRedirect: "/login",
-}),
-  (req, res) => {
-    const user = req.user;
-    const token = jwt.sign(
-      {
-        userID: user._id,
-        email: user.email,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" },
-    );
+// router.get(
+//   "/github",
+//   passport.authenticate("github", { scope: ["user:email"] }),
+// );
 
-    res.redirect(`${
-      process.env.FRONTEND_URL
-    }/auth-callback?token=${token}&userId=${user._id}
-    }`);
-  });
+// router.get(
+//   "/github/callback",
+//   passport.authenticate("github", { failureRedirect: "/login" }), // 👈 修复了参数层级
+//   (req, res) => {
+//     const user = req.user;
+//     const token = jwt.sign(
+//       {
+//         userId: user._id,
+//         email: user.email,
+//       },
+//       process.env.JWT_SECRET,
+//       { expiresIn: "7d" },
+//     );
+
+//     res.redirect(
+//       `${process.env.FRONTEND_URL}/auth-callback?token=${token}&userId=${user._id}`,
+//     );
+//   },
+// );
 
 router.post("/logout", (req, res) => {
   res.json({ message: "Logged out successfully" });
@@ -78,3 +78,5 @@ router.get("/me", authenticationToken, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
+module.exports = router;

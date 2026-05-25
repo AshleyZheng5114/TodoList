@@ -37,46 +37,51 @@ passport.use(
 );
 
 // GitHub OAuth
-passport.use(
-  new GitHubStrategy({
-    clientID: process.env.GITHUB_CLIENT_ID,
-    clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: process.env.GITHUB_CALLBACK_URL,
-  }),
-  async (accessToken, refreshToken, profile, done) => {
-    try {
-      let user = await User.findOne({ githubId: profile.id });
+// passport.use(
+//   new GitHubStrategy(
+//     {
+//       clientID: process.env.GITHUB_CLIENT_ID,
+//       clientSecret: process.env.GITHUB_CLIENT_SECRET,
+//       callbackURL: process.env.GITHUB_CALLBACK_URL,
+//     },
+//     async (accessToken, refreshToken, profile, done) => {
+//       try {
+//         let user = await User.findOne({ githubId: profile.id });
 
-      if (user) {
-        return done(null, user);
-      }
+//         if (user) {
+//           return done(null, user);
+//         }
 
-      user = new User({
-        githubId: profile.id,
-        email:
-          profile.emails && profile.emails[0]
-            ? profile.emails[0].value
-            : `${profile.username}@github.com`, // Fallback email if not provided
-        displayName: profile.displayName || profile.username, // Fallback to username if displayName is not provided
-        avatar: profile.photos[0]?.value || null,
-      });
+//         user = new User({
+//           githubId: profile.id,
+//           email:
+//             profile.emails && profile.emails[0]
+//               ? profile.emails[0].value
+//               : `${profile.username}@github.com`, // Fallback email if not provided
+//           displayName: profile.displayName || profile.username, // Fallback to username if displayName is not provided
+//           avatar: profile.photos[0]?.value || null,
+//         });
 
-      await user.save();
-      done(null, user);
-    } catch (error) {
-      done(error, null);
-    }
-  },
-);
+//         await user.save();
+//         done(null, user);
+//       } catch (error) {
+//         done(error, null);
+//       }
+//     },
+//   ),
+// );
 
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
 
-passport.deserializeUser((id, done) => {
-  User.findById(id, (err, user) => {
-    done(err, user);
-  });
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (error) {
+    done(error, null);
+  }
 });
 
 module.exports = passport;
